@@ -3,7 +3,7 @@
   "name": "shlink-utilites",
   "title": "Shlink Utilites",
   "description": "Helps you manage the short links of an Shlink server instance.",
-  "icon": "extension-icon.png",
+  "icon": "shlink.png",
   "author": "joshika39",
   "contributors": [
     "joshika39"
