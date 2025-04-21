@@ -25,13 +25,21 @@ type Values = {
   url: string;
   slug?: string;
   generateQRCode?: boolean;
+  qrCodeBgColor?: string;
+  qrCodeColor?: string;
+  qrCodeErrorCorrection?: string;
+  qrCodeMargin?: string;
+  qrCodeSize?: string;
+  qrCodeLogoType?: string;
+  qrCodeLogo?: string;
+  qrCodeLogoFile?: string[];
 };
 
 type Payload = {
   longUrl: string;
   validateUrl: boolean;
   findIfExists: boolean;
-  slug?: string;
+  customSlug?: string;
 };
 
 export function ResultDetails({ shortUrl, qrUrl }: { shortUrl: string; qrUrl: string }) {
@@ -92,12 +100,16 @@ export default function Command() {
 
       const apiUrl = `${preferences.protocol}://${preferences.host}/rest/v1/short-urls`;
       const apiKey = preferences.apiKey;
+
       const payload: Payload = {
         longUrl: values.url,
         validateUrl: false,
         findIfExists: true,
-        slug: values.slug,
       };
+
+      if (values.slug) {
+        payload.customSlug = values.slug;
+      }
 
       const toast = await showToast({
         style: Toast.Style.Animated,
@@ -118,13 +130,21 @@ export default function Command() {
         const shortUrl = data.shortUrl;
         const shortCode = shortUrl.split("/").pop();
 
-        const qrUrl = values.generateQRCode
-          ? `https://l.kou-gen.net/${shortCode}/qr-code?size=300&format=png&margin=25&errorCorrection=Q&roundBlockSize=true&color=%23000098&bgColor=%23ffffff`
+        let qrUrl = values.generateQRCode
+          ? `https://l.kou-gen.net/${shortCode}/qr-code?format=png&bgColor=${values.qrCodeBgColor}&color=${values.qrCodeColor}&errorCorrection=${values.qrCodeErrorCorrection}&margin=${values.qrCodeMargin}&size=${values.qrCodeSize}`
           : "";
+
+        if (values.generateQRCode && values.qrCodeLogo) {
+          const logoUrl = encodeURIComponent(values.qrCodeLogo);
+          qrUrl += `&logo=${logoUrl}`;
+        }
 
         toast.style = Toast.Style.Success;
         toast.title = "Short URL created";
-        push(<ResultDetails shortUrl={shortUrl} qrUrl={qrUrl} />);
+        toast.message = `Short URL: ${shortUrl}`;
+        if (values.generateQRCode) {
+          push(<ResultDetails shortUrl={shortUrl} qrUrl={qrUrl} />);
+        }
       } catch {
         toast.style = Toast.Style.Failure;
         toast.title = "Failed to create short URL";
@@ -133,10 +153,31 @@ export default function Command() {
     },
     validation: {
       url: FormValidation.Required,
+      qrCodeLogoFile: (files) => {
+        if (files?.length === 0 || files === undefined) {
+          return "Please select a file";
+        }
+        if (files?.length > 1) {
+          return "Please select only one file";
+        }
+        const file = files[0];
+        const validExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+        const fileExtension = path.extname(file).toLowerCase();
+        if(!validExtensions.includes(fileExtension)) {
+          return `Invalid file type. Supported types: ${validExtensions.join(", ")}`;
+        }
+      }
     },
     initialValues: {
       url: "",
       generateQRCode: true,
+      qrCodeBgColor: "#ffffff",
+      qrCodeColor: "#000000",
+      qrCodeErrorCorrection: "L",
+      qrCodeMargin: "25",
+      qrCodeSize: "300",
+      qrCodeLogo: "",
+      qrCodeLogoType: "file",
     },
   });
 
@@ -145,6 +186,13 @@ export default function Command() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Create Short URL" onSubmit={handleSubmit} />
+          {itemProps.url.value && (
+            <Action.CopyToClipboard
+              title="Copy URL to Clipboard"
+              content={itemProps.url.value}
+              shortcut={{ modifiers: ["cmd"], key: "c" }}
+            />
+          )}
         </ActionPanel>
       }
     >
@@ -152,6 +200,32 @@ export default function Command() {
       <Form.TextField title="URL" placeholder="https://example.com" {...itemProps.url} />
       <Form.TextField title="Slug" placeholder="Optional slug" {...itemProps.slug} />
       <Form.Checkbox title="Generate QR Code" label="Yes" {...itemProps.generateQRCode} />
+      {itemProps.generateQRCode.value && (
+        <>
+          <Form.Separator />
+          <Form.Description title="QR Code Options" text="Customize the QR code appearance." />
+          <Form.TextField title="QR Code Background Color" placeholder="#ffffff" {...itemProps.qrCodeBgColor} />
+          <Form.TextField title="QR Code Color" placeholder="#000000" {...itemProps.qrCodeColor} />
+          <Form.Dropdown title="QR Code Error Correction" {...itemProps.qrCodeErrorCorrection}>
+            <Form.Dropdown.Item value="L" title="Low (7% error correction)" />
+            <Form.Dropdown.Item value="M" title="Medium (15% error correction)" />
+            <Form.Dropdown.Item value="Q" title="Quartile (25% error correction)" />
+            <Form.Dropdown.Item value="H" title="High (30% error correction)" />
+          </Form.Dropdown>
+          <Form.TextField title="QR Code Margin" placeholder="25" {...itemProps.qrCodeMargin} />
+          <Form.TextField title="QR Code Size" placeholder="300" {...itemProps.qrCodeSize} />
+          <Form.Dropdown title="QR Code Logo Type" {...itemProps.qrCodeLogoType}>
+            <Form.Dropdown.Item value="file" title="File" />
+            <Form.Dropdown.Item value="url" title="URL" />
+          </Form.Dropdown>
+          {itemProps.qrCodeLogoType.value === "file" && (
+            <Form.FilePicker title="QR Code Logo" {...itemProps.qrCodeLogoFile} canChooseDirectories={false} allowMultipleSelection={false} />
+          )}
+          {itemProps.qrCodeLogoType.value === "url" && (
+            <Form.TextField title="QR Code Logo URL"  placeholder="https://example.com/logo.png" {...itemProps.qrCodeLogo} />
+          )}
+        </>
+      )}
     </Form>
   );
 }
