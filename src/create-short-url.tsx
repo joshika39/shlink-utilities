@@ -35,7 +35,7 @@ type Values = {
   qrCodeErrorCorrection?: string;
   qrCodeMargin?: string;
   qrCodeSize?: string;
-  qrCodeLogo?: string;
+  qrCodeLogoEnabled?: boolean;
 };
 
 type Payload = {
@@ -54,7 +54,9 @@ export function ResultDetails({ shortUrl, qrUrl }: { shortUrl: string; qrUrl: st
   });
 
   async function copyImageFile() {
-    if (!data) return;
+    if (!data || !(data instanceof ArrayBuffer)) {
+      return;
+    }
 
     const tempPath = path.join(os.tmpdir(), "qr-code.png");
     try {
@@ -70,7 +72,8 @@ export function ResultDetails({ shortUrl, qrUrl }: { shortUrl: string; qrUrl: st
     }
   }
 
-  const base64Image = data ? `data:image/png;base64,${Buffer.from(data).toString("base64")}` : "";
+  const base64Image =
+    data instanceof ArrayBuffer ? `data:image/png;base64,${Buffer.from(data).toString("base64")}` : "";
 
   return (
     <Detail
@@ -148,14 +151,12 @@ export default function Command() {
             size: values.qrCodeSize || "300",
           });
 
-          if (values.qrCodeLogo) {
-            queryParams.append("logoUrl", values.qrCodeLogo);
+          if (!values.qrCodeLogoEnabled) {
+            queryParams.append("logo", "disable");
           }
 
           qrUrl = `${qrUrl}?${queryParams.toString()}`;
         }
-
-        console.log(qrUrl);
 
         toast.style = Toast.Style.Success;
         toast.title = "Short URL created";
@@ -180,7 +181,7 @@ export default function Command() {
       qrCodeErrorCorrection: "L",
       qrCodeMargin: "25",
       qrCodeSize: "300",
-      qrCodeLogo: "",
+      qrCodeLogoEnabled: true,
     },
   });
 
@@ -217,15 +218,7 @@ export default function Command() {
           </Form.Dropdown>
           <Form.TextField title="QR Code Margin" placeholder="25" {...itemProps.qrCodeMargin} />
           <Form.TextField title="QR Code Size" placeholder="300" {...itemProps.qrCodeSize} />
-          <Form.Dropdown title="QR Code Logo Type" {...itemProps.qrCodeLogoType}>
-            <Form.Dropdown.Item value="file" title="File" />
-            <Form.Dropdown.Item value="url" title="URL" />
-          </Form.Dropdown>
-          <Form.TextField
-            title="QR Code Logo URL"
-            placeholder="https://example.com/logo.png"
-            {...itemProps.qrCodeLogo}
-          />
+          <Form.Checkbox title="QR Code Logo" label={"Do you want to add a logo?"} {...itemProps.qrCodeLogoEnabled} />
         </>
       )}
     </Form>
