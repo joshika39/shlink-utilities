@@ -14,11 +14,16 @@ import { FormValidation, useFetch, useForm } from "@raycast/utils";
 import { writeFile } from "fs/promises";
 import os from "os";
 import path from "path";
+import { useState } from "react";
 
 interface Preferences {
   protocol: string;
   apiKey?: string;
   host?: string;
+  qrCodeBgColor?: string;
+  qrCodeColor?: string;
+  qrCodeErrorCorrection?: string;
+  qrCodeMargin?: string;
 }
 
 type Values = {
@@ -30,9 +35,7 @@ type Values = {
   qrCodeErrorCorrection?: string;
   qrCodeMargin?: string;
   qrCodeSize?: string;
-  qrCodeLogoType?: string;
   qrCodeLogo?: string;
-  qrCodeLogoFile?: string[];
 };
 
 type Payload = {
@@ -87,6 +90,8 @@ export default function Command() {
   const preferences = getPreferenceValues<Preferences>();
   const { push } = useNavigation();
 
+  const [shortUrl, setShortUrl] = useState<string | null>(null);
+
   const { handleSubmit, itemProps } = useForm<Values>({
     onSubmit: async (values) => {
       if (!preferences.apiKey || !preferences.host) {
@@ -130,14 +135,18 @@ export default function Command() {
         const shortUrl = data.shortUrl;
         const shortCode = shortUrl.split("/").pop();
 
+        setShortUrl(shortUrl);
+
         let qrUrl = values.generateQRCode
           ? `https://l.kou-gen.net/${shortCode}/qr-code?format=png&bgColor=${values.qrCodeBgColor}&color=${values.qrCodeColor}&errorCorrection=${values.qrCodeErrorCorrection}&margin=${values.qrCodeMargin}&size=${values.qrCodeSize}`
           : "";
 
         if (values.generateQRCode && values.qrCodeLogo) {
           const logoUrl = encodeURIComponent(values.qrCodeLogo);
-          qrUrl += `&logo=${logoUrl}`;
+          qrUrl += `&logoUrl=${logoUrl}`;
         }
+
+        console.log(qrUrl);
 
         toast.style = Toast.Style.Success;
         toast.title = "Short URL created";
@@ -153,20 +162,6 @@ export default function Command() {
     },
     validation: {
       url: FormValidation.Required,
-      qrCodeLogoFile: (files) => {
-        if (files?.length === 0 || files === undefined) {
-          return "Please select a file";
-        }
-        if (files?.length > 1) {
-          return "Please select only one file";
-        }
-        const file = files[0];
-        const validExtensions = [".png", ".jpg", ".jpeg", ".gif"];
-        const fileExtension = path.extname(file).toLowerCase();
-        if(!validExtensions.includes(fileExtension)) {
-          return `Invalid file type. Supported types: ${validExtensions.join(", ")}`;
-        }
-      }
     },
     initialValues: {
       url: "",
@@ -177,7 +172,6 @@ export default function Command() {
       qrCodeMargin: "25",
       qrCodeSize: "300",
       qrCodeLogo: "",
-      qrCodeLogoType: "file",
     },
   });
 
@@ -189,7 +183,7 @@ export default function Command() {
           {itemProps.url.value && (
             <Action.CopyToClipboard
               title="Copy URL to Clipboard"
-              content={itemProps.url.value}
+              content={shortUrl || ""}
               shortcut={{ modifiers: ["cmd"], key: "c" }}
             />
           )}
@@ -218,12 +212,11 @@ export default function Command() {
             <Form.Dropdown.Item value="file" title="File" />
             <Form.Dropdown.Item value="url" title="URL" />
           </Form.Dropdown>
-          {itemProps.qrCodeLogoType.value === "file" && (
-            <Form.FilePicker title="QR Code Logo" {...itemProps.qrCodeLogoFile} canChooseDirectories={false} allowMultipleSelection={false} />
-          )}
-          {itemProps.qrCodeLogoType.value === "url" && (
-            <Form.TextField title="QR Code Logo URL"  placeholder="https://example.com/logo.png" {...itemProps.qrCodeLogo} />
-          )}
+          <Form.TextField
+            title="QR Code Logo URL"
+            placeholder="https://example.com/logo.png"
+            {...itemProps.qrCodeLogo}
+          />
         </>
       )}
     </Form>
