@@ -137,13 +137,22 @@ export default function Command() {
 
         setShortUrl(shortUrl);
 
-        let qrUrl = values.generateQRCode
-          ? `https://l.kou-gen.net/${shortCode}/qr-code?format=png&bgColor=${values.qrCodeBgColor}&color=${values.qrCodeColor}&errorCorrection=${values.qrCodeErrorCorrection}&margin=${values.qrCodeMargin}&size=${values.qrCodeSize}`
-          : "";
+        let qrUrl = `https://l.kou-gen.net/${shortCode}/qr-code`;
 
-        if (values.generateQRCode && values.qrCodeLogo) {
-          const logoUrl = encodeURIComponent(values.qrCodeLogo);
-          qrUrl += `&logoUrl=${logoUrl}`;
+        if (values.generateQRCode) {
+          const queryParams = new URLSearchParams({
+            bgColor: values.qrCodeBgColor || preferences.qrCodeBgColor || "#ffffff",
+            color: values.qrCodeColor || preferences.qrCodeColor || "#000000",
+            errorCorrection: values.qrCodeErrorCorrection || preferences.qrCodeErrorCorrection || "L",
+            margin: values.qrCodeMargin || preferences.qrCodeMargin || "25",
+            size: values.qrCodeSize || "300",
+          });
+
+          if (values.qrCodeLogo) {
+            queryParams.append("logoUrl", values.qrCodeLogo);
+          }
+
+          qrUrl = `${qrUrl}?${queryParams.toString()}`;
         }
 
         console.log(qrUrl);
