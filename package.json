@@ -51,11 +51,62 @@
   ],
   "commands": [
     {
-      "name": "create-short-url",
-      "title": "Create Short URL",
+      "name": "create-advanced-short-url",
+      "title": "Create Advanced Short URL",
       "subtitle": "Create an Shlink Short URL",
       "description": "Creates a short URL from the specified parameters.",
-      "mode": "view"
+      "mode": "view",
+      "preferences": [
+        {
+          "name": "qrCodeColor",
+          "title": "QR Code Color",
+          "required": false,
+          "description": "The color of the QR code.",
+          "type": "textfield",
+          "placeholder": "#000000"
+        },
+        {
+          "name": "qrCodeBgColor",
+          "title": "QR Code Background Color",
+          "required": false,
+          "description": "The background color of the QR code.",
+          "type": "textfield",
+          "placeholder": "#ffffff"
+        },
+        {
+          "name": "qrCodeSize",
+          "title": "QR Code Size",
+          "required": false,
+          "description": "The size of the QR code.",
+          "type": "textfield",
+          "placeholder": "200"
+        },
+        {
+          "name": "qrCodeErrorCorrectionLevel",
+          "title": "QR Code Error Correction Level",
+          "required": false,
+          "description": "The error correction level of the QR code.",
+          "type": "dropdown",
+          "data": [
+            {
+              "title": "L (7%)",
+              "value": "L"
+            },
+            {
+              "title": "M (15%)",
+              "value": "M"
+            },
+            {
+              "title": "Q (25%)",
+              "value": "Q"
+            },
+            {
+              "title": "H (30%)",
+              "value": "H"
+            }
+          ]
+        }
+      ]
     }
   ],
   "dependencies": {

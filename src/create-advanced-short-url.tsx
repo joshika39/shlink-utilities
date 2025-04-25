@@ -22,19 +22,19 @@ interface Preferences {
   host?: string;
   qrCodeBgColor?: string;
   qrCodeColor?: string;
-  qrCodeErrorCorrection?: string;
-  qrCodeMargin?: string;
+  qrCodeErrorCorrectionLevel?: string;
+  qrCodeSize?: string;
 }
 
 type Values = {
   url: string;
   slug?: string;
   generateQRCode?: boolean;
-  qrCodeBgColor?: string;
-  qrCodeColor?: string;
-  qrCodeErrorCorrection?: string;
+  qrCodeBgColor: string;
+  qrCodeColor: string;
+  qrCodeErrorCorrection: string;
   qrCodeMargin?: string;
-  qrCodeSize?: string;
+  qrCodeSize: string;
   qrCodeLogoEnabled?: boolean;
 };
 
@@ -144,11 +144,11 @@ export default function Command() {
 
         if (values.generateQRCode) {
           const queryParams = new URLSearchParams({
-            bgColor: values.qrCodeBgColor || preferences.qrCodeBgColor || "#ffffff",
-            color: values.qrCodeColor || preferences.qrCodeColor || "#000000",
-            errorCorrection: values.qrCodeErrorCorrection || preferences.qrCodeErrorCorrection || "L",
-            margin: values.qrCodeMargin || preferences.qrCodeMargin || "25",
-            size: values.qrCodeSize || "300",
+            bgColor: values.qrCodeBgColor,
+            color: values.qrCodeColor,
+            errorCorrection: values.qrCodeErrorCorrection,
+            margin: values.qrCodeMargin || "25",
+            size: values.qrCodeSize,
           });
 
           if (!values.qrCodeLogoEnabled) {
@@ -176,11 +176,11 @@ export default function Command() {
     initialValues: {
       url: "",
       generateQRCode: true,
-      qrCodeBgColor: "#ffffff",
-      qrCodeColor: "#000000",
-      qrCodeErrorCorrection: "L",
+      qrCodeBgColor: preferences.qrCodeBgColor || "#ffffff",
+      qrCodeColor: preferences.qrCodeColor || "#000000",
+      qrCodeErrorCorrection: preferences.qrCodeErrorCorrectionLevel || "L",
       qrCodeMargin: "25",
-      qrCodeSize: "300",
+      qrCodeSize: preferences.qrCodeSize || "300",
       qrCodeLogoEnabled: true,
     },
   });
